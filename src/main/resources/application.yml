@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:companyverification;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  h2:
+    console:
+      enabled: true
+
+app:
+  third-party:
+    base-url: http://localhost:8080
+  failure-rate:
+    free: 40
+    premium: 10
+  data:
+    free-file: free_service_companies-1.json
+    premium-file: premium_service_companies-1.json
