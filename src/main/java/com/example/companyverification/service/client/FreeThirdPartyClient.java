@@ -4,6 +4,8 @@ import com.example.companyverification.exception.ThirdPartyServiceException;
 import com.example.companyverification.mapper.CompanyMapper;
 import com.example.companyverification.model.domain.Company;
 import com.example.companyverification.model.external.FreeApiCompany;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,8 @@ import java.util.List;
 
 @Component
 public class FreeThirdPartyClient implements ThirdPartyClient {
+
+    private static final Logger log = LoggerFactory.getLogger(FreeThirdPartyClient.class);
 
     private static final ParameterizedTypeReference<List<FreeApiCompany>> RESPONSE_TYPE =
             new ParameterizedTypeReference<>() { };
@@ -28,6 +32,7 @@ public class FreeThirdPartyClient implements ThirdPartyClient {
 
     @Override
     public List<Company> search(String query) throws ThirdPartyServiceException {
+        log.debug("Calling FREE third-party service query={}", query);
         List<FreeApiCompany> rawCompanies = restClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/free-third-party")
                         .queryParam("query", query)
@@ -43,6 +48,7 @@ public class FreeThirdPartyClient implements ThirdPartyClient {
             return Collections.emptyList();
         }
 
+        log.debug("FREE service returned resultCount={}", rawCompanies.size());
         return rawCompanies.stream().map(companyMapper::fromFree).toList();
     }
 }

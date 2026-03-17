@@ -7,6 +7,8 @@ import com.example.companyverification.model.dto.VerificationResponse;
 import com.example.companyverification.repository.VerificationRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -15,6 +17,8 @@ import java.util.UUID;
 
 @Service
 public class VerificationStorageService implements VerificationStoragePort {
+
+    private static final Logger log = LoggerFactory.getLogger(VerificationStorageService.class);
 
     private final VerificationRepository verificationRepository;
     private final ObjectMapper objectMapper;
@@ -39,6 +43,7 @@ public class VerificationStorageService implements VerificationStoragePort {
         entity.setSource(response.source());
         entity.setResultJson(toJson(response));
         verificationRepository.save(entity);
+        log.info("Verification stored verificationId={} status={} source={}", verificationId, response.status(), response.source());
         return response;
     }
 

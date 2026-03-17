@@ -8,6 +8,8 @@ import com.example.companyverification.model.dto.BackendServiceResponse;
 import com.example.companyverification.model.dto.CompanyResult;
 import com.example.companyverification.model.dto.VerificationStatus;
 import com.example.companyverification.service.client.ThirdPartyClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ import java.util.UUID;
 
 @Service
 public class CompanyVerificationService {
+
+    private static final Logger log = LoggerFactory.getLogger(CompanyVerificationService.class);
 
     private final ThirdPartyClient freeThirdPartyClient;
     private final ThirdPartyClient premiumThirdPartyClient;
@@ -37,20 +41,28 @@ public class CompanyVerificationService {
 
     public BackendServiceResponse verify(UUID verificationId, String query) {
         return verificationStorageService.findStoredVerification(verificationId)
+                .map(stored -> {
+                    log.info("Returning stored verification verificationId={} status={}", verificationId, stored.status());
+                    return stored;
+                })
                 .orElseGet(() -> processVerification(verificationId, query));
     }
 
     private BackendServiceResponse processVerification(UUID verificationId, String query) {
+        log.info("Processing verification verificationId={} query={}", verificationId, query);
+
         boolean freeUnavailable = false;
         List<Company> freeActiveCompanies = Collections.emptyList();
 
         try {
             freeActiveCompanies = activeOnly(freeThirdPartyClient.search(query));
         } catch (ThirdPartyServiceException ex) {
+            log.warn("FREE service unavailable verificationId={}", verificationId);
             freeUnavailable = true;
         }
 
         if (!freeActiveCompanies.isEmpty()) {
+            log.info("Verification resolved verificationId={} source=FREE matchCount={}", verificationId, freeActiveCompanies.size());
             BackendServiceResponse response = buildFoundResponse(
                     verificationId,
                     query,
@@ -65,10 +77,12 @@ public class CompanyVerificationService {
         try {
             premiumActiveCompanies = activeOnly(premiumThirdPartyClient.search(query));
         } catch (ThirdPartyServiceException ex) {
+            log.warn("PREMIUM service unavailable verificationId={}", verificationId);
             premiumUnavailable = true;
         }
 
         if (!premiumActiveCompanies.isEmpty()) {
+            log.info("Verification resolved verificationId={} source=PREMIUM matchCount={}", verificationId, premiumActiveCompanies.size());
             BackendServiceResponse response = buildFoundResponse(
                     verificationId,
                     query,
@@ -80,6 +94,7 @@ public class CompanyVerificationService {
 
         BackendServiceResponse response;
         if (freeUnavailable && premiumUnavailable) {
+            log.error("Both third-party services unavailable verificationId={}", verificationId);
             response = new BackendServiceResponse(
                     verificationId,
                     query,
@@ -89,6 +104,7 @@ public class CompanyVerificationService {
                     List.of()
             );
         } else {
+            log.info("No active results found verificationId={}", verificationId);
             VerificationSource source = !premiumUnavailable ? VerificationSource.PREMIUM : VerificationSource.FREE;
             response = new BackendServiceResponse(
                     verificationId,

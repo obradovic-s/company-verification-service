@@ -1,6 +1,8 @@
 package com.example.companyverification.exception;
 
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,6 +15,8 @@ import java.time.Instant;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(VerificationNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleVerificationNotFound(VerificationNotFoundException ex) {
@@ -36,6 +40,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ThirdPartyServiceException.class)
     public ResponseEntity<ErrorResponse> handleThirdParty(ThirdPartyServiceException ex) {
+        log.warn("Third-party service error: {}", ex.getMessage());
         return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
 
@@ -47,6 +52,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+        log.error("Unhandled exception", ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected server error");
     }
 
