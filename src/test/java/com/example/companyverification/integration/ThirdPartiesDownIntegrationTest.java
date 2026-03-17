@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.UUID;
@@ -38,14 +40,15 @@ class ThirdPartiesDownIntegrationTest {
     @Test
     void returnsThirdPartiesDownWhenBothFail() {
         UUID id = UUID.randomUUID();
-        BackendServiceResponse response = restTemplate.getForObject(
+        ResponseEntity<BackendServiceResponse> entity = restTemplate.getForEntity(
                 "/backend-service?verificationId={id}&query={query}",
                 BackendServiceResponse.class,
                 id,
                 "CJQ"
         );
 
-        assertThat(response).isNotNull();
-        assertThat(response.status()).isEqualTo(VerificationStatus.THIRD_PARTIES_DOWN);
+        assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(entity.getBody()).isNotNull();
+        assertThat(entity.getBody().status()).isEqualTo(VerificationStatus.THIRD_PARTIES_DOWN);
     }
 }
