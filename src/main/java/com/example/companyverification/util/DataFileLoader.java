@@ -5,7 +5,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -23,14 +22,13 @@ public class DataFileLoader {
     public <T> List<T> loadList(String fileName, Class<T[]> arrayClass) {
         try {
             Resource resource = new ClassPathResource("data/" + fileName);
-            if (resource.exists()) {
-                try (InputStream inputStream = resource.getInputStream()) {
-                    return Arrays.asList(objectMapper.readValue(inputStream, arrayClass));
-                }
+            if (!resource.exists()) {
+                throw new IllegalStateException("Data file not found on classpath: data/" + fileName);
             }
 
-            File file = new File(fileName);
-            return Arrays.asList(objectMapper.readValue(file, arrayClass));
+            try (InputStream inputStream = resource.getInputStream()) {
+                return Arrays.asList(objectMapper.readValue(inputStream, arrayClass));
+            }
         } catch (IOException ex) {
             throw new IllegalStateException("Could not load data file: " + fileName, ex);
         }
