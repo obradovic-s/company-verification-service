@@ -4,8 +4,10 @@ import com.example.companyverification.model.external.PremiumApiCompany;
 import com.example.companyverification.util.DataFileLoader;
 import com.example.companyverification.util.FailureSimulator;
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/premium-third-party")
 public class PremiumThirdPartyController {
@@ -43,7 +46,7 @@ public class PremiumThirdPartyController {
     }
 
     @GetMapping
-    public List<PremiumApiCompany> search(@RequestParam("query") String query) {
+    public List<PremiumApiCompany> search(@RequestParam("query") @NotBlank String query) {
         if (failureSimulator.shouldFail(failureRate)) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "PREMIUM service unavailable");
         }
