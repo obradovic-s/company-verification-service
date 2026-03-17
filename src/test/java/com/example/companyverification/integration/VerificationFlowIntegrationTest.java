@@ -6,6 +6,8 @@ import com.example.companyverification.repository.VerificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.test.annotation.DirtiesContext;
@@ -77,5 +79,17 @@ class VerificationFlowIntegrationTest {
 
         assertThat(first).isNotNull();
         assertThat(second).isEqualTo(first);
+    }
+
+    @Test
+    void returnsBadRequestForInvalidVerificationIdFormatOnRead() {
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                "/verifications/{id}",
+                String.class,
+                "not-a-uuid"
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("Invalid verificationId format");
     }
 }
